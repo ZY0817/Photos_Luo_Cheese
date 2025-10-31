@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猫咪相册 - 高质量图片视频存储</title>
+    <style>
+        :root {
+            --primary-color: #ff9e80;
+            --secondary-color: #ffccbc;
+            --accent-color: #ff7043;
+            --dark-color: #5d4037;
+            --light-color: #fbe9e7;
+            --text-color: #4e342e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+        
+        .logo-icon {
+            font-size: 2.5rem;
+            margin-right: 0.5rem;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        
+        .upload-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        
+        .upload-btn {
+            display: inline-block;
+            background: var(--accent-color);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 1rem 0;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(255, 112, 67, 0.3);
+        }
+        
+        .upload-btn:hover {
+            background: var(--dark-color);
+            transform: translateY(-2px);
+        }
+        
+        #file-input {
+            display: none;
+        }
+        
+        .upload-info {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .media-item {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .media-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .media-item img, .media-item video {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .live-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+        
+        .media-info {
+            padding: 1rem;
+        }
+        
+        .media-name {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .media-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .download-btn {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+        }
+        
+        .modal-content img, .modal-content video {
+            max-width: 100%;
+            max-height: 80vh;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            background: rgba(0,0,0,0.5);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .live-player {
+            position: relative;
+        }
+        
+        .live-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .play-live-btn {
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+            font-size: 0.9rem;
+            border-top: 1px solid #eee;
+            margin-top: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .gallery {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 1rem;
+            }
+            
+            .media-item img, .media-item video {
+                height: 150px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <span class="logo-icon">🐱</span>
+            <h1>猫咪相册</h1>
+        </div>
+        <p>高质量存储您的猫咪图片和视频</p>
+    </header>
+    
+    <div class="container">
+        <section class="upload-section">
+            <h2>上传猫咪图片或视频</h2>
+            <p>支持JPG、PNG、GIF、MP4、MOV格式，包括苹果Live图</p>
+            <label for="file-input" class="upload-btn">选择文件</label>
+            <input type="file" id="file-input" multiple accept="image/*,video/*">
+            <div class="upload-info">
+                <p>文件将保持原始画质，不会压缩</p>
+                <p>Live图上传后点击可查看动态效果</p>
+            </div>
+        </section>
+        
+        <section class="gallery-section">
+            <h2>我的猫咪相册</h2>
+            <div class="gallery" id="gallery">
+                <!-- 媒体项将通过JavaScript动态添加 -->
+            </div>
+        </section>
+    </div>
+    
+    <div class="modal" id="modal">
+        <div class="close-btn" id="close-modal">&times;</div>
+        <div class="modal-content" id="modal-content">
+            <!-- 媒体内容将在这里显示 -->
+        </div>
+    </div>
+    
+    <footer>
+        <p>猫咪相册 &copy; 2023 - 专为猫咪爱好者设计</p>
+        <p>支持手机和PC端，苹果Live图友好</p>
+    </footer>
+
+    <script>
+        // 模拟存储 - 实际应用中这里应该连接到后端API
+        let mediaItems = JSON.parse(localStorage.getItem('catMedia')) || [];
+        
+        // DOM元素
+        const fileInput = document.getElementById('file-input');
+        const gallery = document.getElementById('gallery');
+        const modal = document.getElementById('modal');
+        const modalContent = document.getElementById('modal-content');
+        const closeModal = document.getElementById('close-modal');
+        
+        // 初始化画廊
+        function renderGallery() {
+            gallery.innerHTML = '';
+            
+            if (mediaItems.length === 0) {
+                gallery.innerHTML = '<p style="grid-column:1/-1; text-align:center; padding:2rem;">还没有上传任何猫咪图片或视频，点击上方按钮上传</p>';
+                return;
+            }
+            
+            mediaItems.forEach((item, index) => {
+                const mediaItem = document.createElement('div');
+                mediaItem.className = 'media-item';
+                
+                let mediaElement;
+                if (item.type.startsWith('image')) {
+                    mediaElement = document.createElement('img');
+                    mediaElement.src = item.url;
+                    mediaElement.alt = item.name;
+                } else {
+                    mediaElement = document.createElement('video');
+                    mediaElement.src = item.url;
+                    mediaElement.poster = item.thumbnail; // 如果有缩略图
+                }
+                
+                const mediaInfo = document.createElement('div');
+                mediaInfo.className = 'media-info';
+                
+                const mediaName = document.createElement('div');
+                mediaName.className = 'media-name';
+                mediaName.textContent = item.name;
+                
+                const mediaMeta = document.createElement('div');
+                mediaMeta.className = 'media-meta';
+                
+                const mediaSize = document.createElement('span');
+                mediaSize.textContent = formatFileSize(item.size);
+                
+                const downloadLink = document.createElement('a');
+                downloadLink.className = 'download-btn';
+                downloadLink.textContent = '下载';
+                downloadLink.href = item.url;
+                downloadLink.download = item.name;
+                
+                mediaMeta.appendChild(mediaSize);
+                mediaMeta.appendChild(downloadLink);
+                
+                mediaInfo.appendChild(mediaName);
+                mediaInfo.appendChild(mediaMeta);
+                
+                mediaItem.appendChild(mediaElement);
+                
+                // 如果是Live图，添加标记
+                if (item.isLivePhoto) {
+                    const liveBadge = document.createElement('div');
+                    liveBadge.className = 'live-badge';
+                    liveBadge.textContent = 'Live';
+                    mediaItem.appendChild(liveBadge);
+                }
+                
+                mediaItem.appendChild(mediaInfo);
+                
+                // 点击打开大图/视频
+                mediaItem.addEventListener('click', () => openMediaModal(item, index));
+                
+                gallery.appendChild(mediaItem);
+            });
+        }
+        
+        // 打开媒体模态框
+        function openMediaModal(item, index) {
+            modalContent.innerHTML = '';
+            
+            let mediaElement;
+            if (item.type.startsWith('image')) {
+                if (item.isLivePhoto && item.liveVideoUrl) {
+                    // 对于Live图，创建特殊播放器
+                    const livePlayer = document.createElement('div');
+                    livePlayer.className = 'live-player';
+                    
+                    const img = document.createElement('img');
+                    img.src = item.url;
+                    img.alt = item.name;
+                    
+                    const video = document.createElement('video');
+                    video.src = item.liveVideoUrl;
+                    video.style.display = 'none';
+                    
+                    const controls = document.createElement('div');
+                    controls.className = 'live-controls';
+                    
+                    const playButton = document.createElement('button');
+                    playButton.className = 'play-live-btn';
+                    playButton.textContent = '播放Live图';
+                    playButton.addEventListener('click', () => {
+                        img.style.display = 'none';
+                        video.style.display = 'block';
+                        video.play();
+                        
+                        // 视频播放结束后显示图片
+                        video.onended = () => {
+                            video.style.display = 'none';
+                            img.style.display = 'block';
+                        };
+                    });
+                    
+                    controls.appendChild(playButton);
+                    livePlayer.appendChild(img);
+                    livePlayer.appendChild(video);
+                    livePlayer.appendChild(controls);
+                    
+                    mediaElement = livePlayer;
+                } else {
+                    mediaElement = document.createElement('img');
+                    mediaElement.src = item.url;
+                    mediaElement.alt = item.name;
+                }
+            } else {
+                mediaElement = document.createElement('video');
+                mediaElement.src = item.url;
+                mediaElement.controls = true;
+                mediaElement.autoplay = true;
+            }
+            
+            modalContent.appendChild(mediaElement);
+            modal.style.display = 'flex';
+        }
+        
+        // 关闭模态框
+        closeModal.addEventListener('click', () => {
+            modal.style.display = 'none';
+            // 停止所有视频播放
+            const videos = modalContent.querySelectorAll('video');
+            videos.forEach(video => {
+                video.pause();
+                video.currentTime = 0;
+            });
+        });
+        
+        // 点击模态框背景关闭
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+                // 停止所有视频播放
+                const videos = modalContent.querySelectorAll('video');
+                videos.forEach(video => {
+                    video.pause();
+                    video.currentTime = 0;
+                });
+            }
+        });
+        
+        // 文件上传处理
+        fileInput.addEventListener('change', (e) => {
+            const files = e.target.files;
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                
+                // 在实际应用中，这里应该上传到服务器
+                // 这里我们使用URL.createObjectURL模拟
+                const url = URL.createObjectURL(file);
+                
+                // 检测是否为Live图 (基于文件类型和名称)
+                const isLivePhoto = file.type === 'image/jpeg' && 
+                    (file.name.toLowerCase().includes('live') || 
+                     file.name.toLowerCase().includes('mov'));
+                
+                // 对于Live图，我们需要同时存储图片和视频部分
+                // 在实际应用中，需要特殊处理Live图文件
+                
+                const newItem = {
+                    id: Date.now() + i,
+                    name: file.name,
+                    type: file.type,
+                    size: file.size,
+                    url: url,
+                    isLivePhoto: isLivePhoto,
+                    // 实际应用中，Live图的视频部分需要单独处理
+                    liveVideoUrl: isLivePhoto ? url.replace('.jpg', '.mov') : null,
+                    uploadDate: new Date().toISOString()
+                };
+                
+                mediaItems.unshift(newItem);
+            }
+            
+            // 更新本地存储
+            localStorage.setItem('catMedia', JSON.stringify(mediaItems));
+            
+            // 重新渲染画廊
+            renderGallery();
+            
+            // 重置文件输入
+            fileInput.value = '';
+        });
+        
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // 初始化
+        renderGallery();
+    </script>
+</body>
+</html>
